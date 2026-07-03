@@ -7,6 +7,7 @@ import {
 } from '@livekit/components-react'
 import { Track } from 'livekit-client'
 import { startEgress, stopEgress } from '../api/livekit'
+import { getErrorMessage } from '../utils/errorMessage'
 import ParticipantTile from './ParticipantTile'
 import { MicOnIcon, MicOffIcon, VideoIcon, VideoOffIcon, RecordIcon, HangupIcon } from './icons'
 
@@ -72,16 +73,16 @@ export default function CallPanel({ members, currentUser, roomId, onStop }) {
         await stopEgress(egressId)
         setIsRecording(false)
         setEgressId(null)
-      } catch {
-        setRecordError('停止录制失败')
+      } catch (err) {
+        setRecordError(getErrorMessage(err, '停止录制失败'))
       }
     } else {
       try {
         const res = await startEgress(roomId)
         setEgressId(res.egress_id)
         setIsRecording(true)
-      } catch {
-        setRecordError('启动录制失败，请检查录制服务')
+      } catch (err) {
+        setRecordError(getErrorMessage(err, '启动录制失败，请检查录制服务'))
       }
     }
   }, [isRecording, egressId, roomId])

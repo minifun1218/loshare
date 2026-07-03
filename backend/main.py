@@ -27,6 +27,20 @@ from routers import rooms as rooms_router
 logger = get_logger("loshare.main")
 
 
+def build_allowed_origins() -> list[str]:
+    allowed_origins = [settings.frontend_origin]
+    if settings.app_env.lower() == "dev":
+        allowed_origins.extend(
+            [
+                "http://localhost:5000",
+                "http://127.0.0.1:5000",
+                "http://localhost:5173",
+                "http://127.0.0.1:5173",
+            ]
+        )
+    return list(dict.fromkeys(allowed_origins))
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     configure_logging(settings.log_level)
@@ -54,7 +68,7 @@ app.state.limiter = limiter
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[settings.frontend_origin, "http://127.0.0.1:5000"],
+    allow_origins=build_allowed_origins(),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

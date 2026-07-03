@@ -3,6 +3,7 @@ import { useSearchParams, useNavigate, Link } from 'react-router-dom'
 import { verifyEmail, resendVerification } from '../api/auth'
 import { useAuth } from '../contexts/AuthContext'
 import { PinFilledIcon, CheckIcon, CloseIcon, MailIcon } from '../components/icons'
+import { getErrorMessage } from '../utils/errorMessage'
 
 export default function VerifyEmailPage() {
   const [searchParams] = useSearchParams()
@@ -23,7 +24,7 @@ export default function VerifyEmailPage() {
       .then(() => setVerifyState('success'))
       .catch(err => {
         setVerifyState('error')
-        setVerifyError(err.response?.data?.detail || '验证失败，请重试')
+        setVerifyError(getErrorMessage(err, '验证失败，请重试'))
       })
   }, [token])
 
@@ -37,7 +38,7 @@ export default function VerifyEmailPage() {
       const res = await resendVerification(email.trim())
       setResendMessage(res.message)
     } catch (err) {
-      setResendError(err.response?.data?.detail || '发送失败，请稍后重试')
+      setResendError(getErrorMessage(err, '发送失败，请稍后重试'))
     } finally {
       setResendLoading(false)
     }

@@ -1,9 +1,16 @@
 const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1', '[::1]', '::1'])
 
 function buildDefaultApiBaseUrl() {
+  if (import.meta.env.DEV) return window.location.origin
+
   const { protocol, hostname } = window.location
   const apiProtocol = protocol === 'https:' ? 'https:' : 'http:'
   return `${apiProtocol}//${hostname}`
+}
+
+function buildDefaultDevWebSocketBaseUrl() {
+  const webSocketProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
+  return `${webSocketProtocol}//${window.location.host}`
 }
 
 function buildWebSocketBaseUrl(apiBaseUrl) {
@@ -37,7 +44,7 @@ export const API_BASE_URL = (
 ).replace(/\/$/, '')
 
 export const WS_BASE_URL = (
-  import.meta.env.VITE_WS_BASE_URL || buildWebSocketBaseUrl(API_BASE_URL)
+  import.meta.env.VITE_WS_BASE_URL || (import.meta.env.DEV ? buildDefaultDevWebSocketBaseUrl() : buildWebSocketBaseUrl(API_BASE_URL))
 ).replace(/\/$/, '')
 
 assertProductionTransportSecurity(API_BASE_URL, WS_BASE_URL)

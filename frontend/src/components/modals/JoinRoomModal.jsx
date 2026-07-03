@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { joinRoom } from '../../api/rooms'
+import { getErrorMessage } from '../../utils/errorMessage'
 import Modal from '../Modal'
 
 export default function JoinRoomModal({ onClose, onJoined }) {
@@ -15,7 +16,7 @@ export default function JoinRoomModal({ onClose, onJoined }) {
       const room = await joinRoom(code.trim().toUpperCase())
       onJoined(room)
     } catch (err) {
-      setError(err.response?.data?.detail || '邀请码不对或已失效')
+      setError(getErrorMessage(err, '邀请码不对或已失效'))
     } finally {
       setLoading(false)
     }

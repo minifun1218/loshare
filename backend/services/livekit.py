@@ -65,8 +65,8 @@ class LiveKitService:
         self._rooms = RoomsRepository(db)
 
     async def create_access_token(self, *, room_id: int, user: User) -> LiveKitTokenResponse:
-        if not await self._rooms.is_member(room_id=room_id, user_id=user.id):
-            raise PermissionDeniedError("您不在该房间中")
+        if not await self._rooms.can_view(room_id=room_id, user_id=user.id):
+            raise PermissionDeniedError("您无权查看该房间")
 
         token = (
             AccessToken(
@@ -90,8 +90,8 @@ class LiveKitService:
         )
 
     async def start_egress(self, *, room_id: int, user: User) -> EgressStartResponse:
-        if not await self._rooms.is_member(room_id=room_id, user_id=user.id):
-            raise PermissionDeniedError("您不在该房间中")
+        if not await self._rooms.can_view(room_id=room_id, user_id=user.id):
+            raise PermissionDeniedError("您无权查看该房间")
 
         name = room_name(room_id)
         filepath = f"/recordings/{name}-{int(time.time())}.mp4"

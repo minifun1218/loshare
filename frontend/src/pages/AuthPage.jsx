@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { login as apiLogin, register as apiRegister, sendCode } from '../api/auth'
 import { PinFilledIcon } from '../components/icons'
+import { getErrorMessage } from '../utils/errorMessage'
 import authHeroFriends from '../assets/auth-hero-friends.webp'
 
 const COUNTDOWN_SEC = 60
@@ -63,7 +64,7 @@ export default function AuthPage({ mode }) {
       setCodeSent(true)
       setCountdown(COUNTDOWN_SEC)
     } catch (err) {
-      setCodeError(err.response?.data?.detail || '发送失败')
+      setCodeError(getErrorMessage(err, '发送失败'))
     } finally {
       setCodeLoading(false)
     }
@@ -99,7 +100,7 @@ export default function AuthPage({ mode }) {
       if (!data.user.is_verified) navigate('/verify-email', { replace: true })
       else navigate('/dashboard', { replace: true })
     } catch (err) {
-      const detail = err.response?.data?.detail
+      const detail = getErrorMessage(err)
       if (detail === 'EMAIL_NOT_VERIFIED') setUnverifiedEmail(true)
       else setServerError(detail || '操作失败')
     } finally {
@@ -134,26 +135,6 @@ export default function AuthPage({ mode }) {
             <strong>3 FRIENDS NEARBY</strong>
             <em><span className="live-dot is-hot" />SHARING · LIVE NOW</em>
           </div>
-        </div>
-
-        <div className="auth-story__copy">
-          <p>{isLogin ? 'WELCOME BACK' : 'PULL UP A SEAT'}</p>
-          <h1>
-            {isLogin ? (
-              <>
-                <span>看看</span>
-                <span className="text-stroke">朋友都</span>
-                <span>到哪了。</span>
-              </>
-            ) : (
-              <>
-                <span>和朋友</span>
-                <span className="text-stroke">共享</span>
-                <span>一张地图。</span>
-              </>
-            )}
-          </h1>
-          <span>只把位置分享给你邀请的人。需要时打开，不想分享时随时停下。</span>
         </div>
       </section>
 

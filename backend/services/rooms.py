@@ -53,8 +53,8 @@ class RoomsService:
     async def list_member_locations(
         self, *, room_id: int, user: User
     ) -> list[MemberLocation]:
-        if not await self._rooms.is_member(room_id=room_id, user_id=user.id):
-            raise PermissionDeniedError("您不在该房间中")
+        if not await self._rooms.can_view(room_id=room_id, user_id=user.id):
+            raise PermissionDeniedError("您无权查看该房间")
 
         from repositories.locations import LocationsRepository
 

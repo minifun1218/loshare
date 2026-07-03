@@ -60,7 +60,7 @@ async def websocket_endpoint(
                 )
                 return
             try:
-                await service.assert_member(room_id=room_id, user=user)
+                await service.assert_can_view(room_id=room_id, user=user)
             except APIError as exc:
                 await ws_send_error_and_close(
                     websocket,

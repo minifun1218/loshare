@@ -1,8 +1,8 @@
-import { useEffect } from 'react'
+import { useEffect, useMemo } from 'react'
 import { MapContainer, TileLayer, Marker, Popup, Circle, useMap } from 'react-leaflet'
 import { createMemberIcon } from './memberIcon'
 
-function MapController({ center, flyTarget }) {
+function MapController({ center, fitPoints, flyTarget }) {
   const map = useMap()
 
   useEffect(() => {
@@ -10,8 +10,20 @@ function MapController({ center, flyTarget }) {
   }, [flyTarget, map])
 
   useEffect(() => {
-    if (center && !flyTarget) map.flyTo(center, map.getZoom(), { animate: true, duration: 1.1 })
-  }, [center, map, flyTarget])
+    if (flyTarget || fitPoints.length < 2) return
+    map.fitBounds(fitPoints, {
+      animate: true,
+      duration: 0.8,
+      padding: [72, 72],
+      maxZoom: 16,
+    })
+  }, [fitPoints, flyTarget, map])
+
+  useEffect(() => {
+    if (center && !flyTarget && fitPoints.length < 2) {
+      map.flyTo(center, map.getZoom(), { animate: true, duration: 1.1 })
+    }
+  }, [center, fitPoints.length, map, flyTarget])
 
   return null
 }
@@ -27,6 +39,20 @@ function formatTime(isoStr) {
 
 export default function MapView({ members, selfPosition, onlineUserIds, currentUserId, flyTarget }) {
   const selfMember = members.find(m => m.user_id === currentUserId)
+  const locatedMembers = useMemo(
+    () => members.filter(member => member.latitude != null && member.longitude != null),
+    [members],
+  )
+  const fitPoints = useMemo(() => {
+    const pointsByUser = new Map()
+    locatedMembers.forEach(member => {
+      pointsByUser.set(member.user_id, [member.latitude, member.longitude])
+    })
+    if (selfPosition && currentUserId && !pointsByUser.has(currentUserId)) {
+      pointsByUser.set(currentUserId, [selfPosition.latitude, selfPosition.longitude])
+    }
+    return Array.from(pointsByUser.values())
+  }, [currentUserId, locatedMembers, selfPosition])
   const center = selfMember
     ? [selfMember.latitude, selfMember.longitude]
     : selfPosition
@@ -47,10 +73,11 @@ export default function MapView({ members, selfPosition, onlineUserIds, currentU
 
       <MapController
         center={selfMember ? [selfMember.latitude, selfMember.longitude] : null}
+        fitPoints={fitPoints}
         flyTarget={flyTarget}
       />
 
-      {members.filter(member => member.latitude != null && member.longitude != null).map((member) => {
+      {locatedMembers.map((member) => {
         const isSelf = member.user_id === currentUserId
         const isOnline = onlineUserIds.includes(member.user_id) || isSelf
         const icon = createMemberIcon(member.username, member.avatar_color, isOnline, isSelf)

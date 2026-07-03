@@ -3,7 +3,7 @@ from __future__ import annotations
 import random
 import string
 
-from sqlalchemy import and_, delete, func, select
+from sqlalchemy import and_, delete, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from models import RoomMember, ShareRoom
@@ -20,6 +20,20 @@ def generate_room_code() -> str:
 class RoomsRepository:
     def __init__(self, db: AsyncSession) -> None:
         self._db = db
+
+    def _can_view_filter(self, user_id: int):
+        member_exists = (
+            select(RoomMember.id)
+            .where(
+                RoomMember.room_id == ShareRoom.id,
+                RoomMember.user_id == user_id,
+            )
+            .exists()
+        )
+        return and_(
+            ShareRoom.is_active.is_(True),
+            or_(ShareRoom.owner_id == user_id, member_exists),
+        )
 
     async def code_exists(self, code: str) -> bool:
         result = await self._db.execute(
@@ -56,18 +70,34 @@ class RoomsRepository:
         return result.scalar_one_or_none()
 
     async def list_for_user(self, user_id: int) -> list[tuple[ShareRoom, int]]:
+        member_counts = (
+            select(
+                RoomMember.room_id.label("room_id"),
+                func.count(RoomMember.id).label("member_count"),
+            )
+            .group_by(RoomMember.room_id)
+            .subquery()
+        )
         stmt = (
             select(
                 ShareRoom,
-                func.count(RoomMember.id),
+                func.coalesce(member_counts.c.member_count, 0),
             )
-            .join(RoomMember, RoomMember.room_id == ShareRoom.id)
-            .where(RoomMember.user_id == user_id, ShareRoom.is_active.is_(True))
-            .group_by(ShareRoom.id)
+            .outerjoin(member_counts, member_counts.c.room_id == ShareRoom.id)
+            .where(self._can_view_filter(user_id))
             .order_by(ShareRoom.created_at.desc())
         )
         result = await self._db.execute(stmt)
         return [(row[0], int(row[1])) for row in result.all()]
+
+    async def can_view(self, *, room_id: int, user_id: int) -> bool:
+        result = await self._db.execute(
+            select(ShareRoom.id).where(
+                ShareRoom.id == room_id,
+                self._can_view_filter(user_id),
+            )
+        )
+        return result.scalar_one_or_none() is not None
 
     async def add_member(self, *, room_id: int, user_id: int) -> None:
         member = RoomMember(room_id=room_id, user_id=user_id)

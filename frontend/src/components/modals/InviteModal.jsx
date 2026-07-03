@@ -1,8 +1,8 @@
 import { memberColor } from '../../utils/memberColor'
 import Modal from '../Modal'
-import { CheckIcon, CopyIcon, LinkIcon } from '../icons'
+import { CheckIcon, CopyIcon, LinkIcon, MapIcon } from '../icons'
 
-export default function InviteModal({ room, onClose, onCopy, copiedKey }) {
+export default function InviteModal({ room, onClose, onCopy, copiedKey, onEnterRoom }) {
   const inviteLink = `${window.location.origin}/join/${room.code}`
   const codeCopied = copiedKey === `inv-code-${room.id}`
   const linkCopied = copiedKey === `inv-link-${room.id}`
@@ -49,6 +49,13 @@ export default function InviteModal({ room, onClose, onCopy, copiedKey }) {
         <div className="invite__link-preview">
           <span>{inviteLink}</span>
         </div>
+
+        {onEnterRoom && (
+          <button type="button" onClick={() => onEnterRoom(room)} className="invite__enter-btn">
+            <MapIcon />
+            进入房间
+          </button>
+        )}
       </div>
     </Modal>
   )

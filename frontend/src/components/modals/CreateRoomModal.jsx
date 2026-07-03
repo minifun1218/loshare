@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { createRoom } from '../../api/rooms'
+import { getErrorMessage } from '../../utils/errorMessage'
 import Modal from '../Modal'
 
 export default function CreateRoomModal({ onClose, onCreated }) {
@@ -15,7 +16,7 @@ export default function CreateRoomModal({ onClose, onCreated }) {
       const room = await createRoom(name.trim())
       onCreated(room)
     } catch (err) {
-      setError(err.response?.data?.detail || '创建失败')
+      setError(getErrorMessage(err, '创建失败'))
     } finally {
       setLoading(false)
     }

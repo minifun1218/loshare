@@ -16,8 +16,8 @@ class LocationsService:
         self._locations = LocationsRepository(db)
 
     async def update(self, *, body: LocationUpdate, user: User):
-        if not await self._rooms.is_member(room_id=body.room_id, user_id=user.id):
-            raise PermissionDeniedError("您不在该房间中")
+        if not await self._rooms.can_view(room_id=body.room_id, user_id=user.id):
+            raise PermissionDeniedError("您无权查看该房间")
 
         loc = await self._locations.upsert(
             user_id=user.id,
@@ -29,9 +29,9 @@ class LocationsService:
         await self._db.commit()
         return loc
 
-    async def assert_member(self, *, room_id: int, user: User) -> None:
-        if not await self._rooms.is_member(room_id=room_id, user_id=user.id):
-            raise PermissionDeniedError("您不在该房间中")
+    async def assert_can_view(self, *, room_id: int, user: User) -> None:
+        if not await self._rooms.can_view(room_id=room_id, user_id=user.id):
+            raise PermissionDeniedError("您无权查看该房间")
 
     async def user_from_token(self, *, token: str) -> User | None:
         from auth import decode_token

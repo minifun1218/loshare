@@ -5,6 +5,7 @@ import { useDialog } from '../contexts/DialogContext'
 import { getRoomMembers, leaveRoom } from '../api/rooms'
 import { updateLocation } from '../api/location'
 import { getLivekitToken } from '../api/livekit'
+import { getErrorMessage } from '../utils/errorMessage'
 import useGeolocation from '../hooks/useGeolocation'
 import useWebSocket from '../hooks/useWebSocket'
 import useScrolled from '../hooks/useScrolled'
@@ -126,7 +127,7 @@ export default function RoomPage() {
       setLivekitToken(data.token)
     } catch (err) {
       console.error('[startCall] error:', err)
-      setCallError('无法开始通话，请稍后再试')
+      setCallError(getErrorMessage(err, '无法开始通话，请稍后再试'))
       setCallStarting(false)
     }
   }

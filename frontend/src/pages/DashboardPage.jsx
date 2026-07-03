@@ -12,6 +12,7 @@ import Marquee from '../components/Marquee'
 import ThemeDecor from '../components/ThemeDecor'
 import { getThemeMarqueeWords } from '../components/themeWords'
 import useCopy from '../hooks/useCopy'
+import { getErrorMessage } from '../utils/errorMessage'
 import { memberColor } from '../utils/memberColor'
 import { PinIcon, UsersIcon, PlusIcon, EnterIcon, ArrowIcon, MapIcon, LinkIcon } from '../components/icons'
 import dashboardHeroFriends from '../assets/dashboard-hero-friends.webp'
@@ -69,7 +70,7 @@ export default function DashboardPage() {
       .then(data => {
         if (!cancelled) setRooms(data)
       })
-      .catch(() => {})
+      .catch(() => { })
       .finally(() => {
         if (!cancelled) setLoading(false)
       })
@@ -85,7 +86,7 @@ export default function DashboardPage() {
         setRooms(r => [room, ...r.filter(x => x.id !== room.id)])
         navigate(`/room/${room.id}`, { state: { room }, replace: true })
       })
-      .catch(() => {})
+      .catch(() => { })
   }, [navigate])
 
   const handleLeave = async (e, roomId) => {
@@ -103,7 +104,7 @@ export default function DashboardPage() {
     } catch (err) {
       await alertDialog({
         title: '操作失败',
-        message: err.response?.data?.detail || '操作失败',
+        message: getErrorMessage(err, '操作失败'),
         type: 'error',
       })
     }
@@ -115,6 +116,11 @@ export default function DashboardPage() {
   const handleLogout = () => {
     logout()
     navigate('/login', { replace: true })
+  }
+
+  const handleEnterInviteRoom = (room) => {
+    setInviteRoom(null)
+    navigate(`/room/${room.id}`, { state: { room } })
   }
 
   const marqueeWords = getThemeMarqueeWords(theme)
@@ -148,14 +154,14 @@ export default function DashboardPage() {
                 <span>{friendCount > 0 ? `${friendCount} FRIENDS ON THE MAP` : 'READY · STANDBY'}</span>
               </div>
               <div className="hero-chip hero-chip--card">
-                <span className="hero-chip__avatar" style={{ background: '#ff4d1c' }}>林</span>
+                <span className="hero-chip__avatar" style={{ background: '#ff4d1c' }}>范</span>
                 <span className="hero-chip__text">
                   <strong>LIN · APPROACHING</strong>
                   <em>1.2 KM · ETA 4 MIN</em>
                 </span>
               </div>
               <div className="hero-chip hero-chip--route">
-                <span className="hero-chip__avatar" style={{ background: '#eae4d3', color: '#17150f' }}>周</span>
+                <span className="hero-chip__avatar" style={{ background: '#eae4d3', color: '#17150f' }}>贾</span>
                 <span className="hero-chip__text">
                   <strong>ARRIVAL ALERT ON</strong>
                   <em>ROUTE LIVE · 18 MIN</em>
@@ -280,7 +286,13 @@ export default function DashboardPage() {
         />
       )}
       {inviteRoom && (
-        <InviteModal room={inviteRoom} onClose={() => setInviteRoom(null)} onCopy={copy} copiedKey={copiedKey} />
+        <InviteModal
+          room={inviteRoom}
+          onClose={() => setInviteRoom(null)}
+          onCopy={copy}
+          copiedKey={copiedKey}
+          onEnterRoom={handleEnterInviteRoom}
+        />
       )}
     </div>
   )
